@@ -1,6 +1,6 @@
 import tkinter as tk
-from tkinter import messagebox, filedialog
-from tkinter import ttk
+from tkinter import messagebox, filedialog, ttk
+from entry_menue import *
 import threading
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -25,6 +25,23 @@ chrome_options.add_argument("--ignore-certificate-errors")
 chrome_options.add_argument("--disable-web-security")
 chrome_options.add_argument("--disable-software-rasterizer")
 
+# Funktion zum ändern der GUI Sprache
+def change_language(language):
+    if language == "Deutsch":
+        header.config(text="🌍 Barrierefreiheitstester")
+        url_label.config(text="🔗 Webseite URL:")
+        test_button.config(text="🔍 Test starten")
+        status_label.config(text="Bereit für den nächsten Test")
+        contrast_check_checkbox.config(text="Kontrast-Check aktivieren")
+        save_button.config(text="📂 Log speichern")
+    elif language == "English":
+        header.config(text="🌍 Accessibility Tester")
+        url_label.config(text="🔗 Website URL:")
+        test_button.config(text="🔍 Start Test")
+        status_label.config(text="Ready for the next test")
+        contrast_check_checkbox.config(text="Enable contrast check")
+        save_button.config(text="📂 Save Log")
+
 # Funktion zum Laden der Übersetzungen aus der JSON-Datei
 def load_translations():
     try:
@@ -41,34 +58,20 @@ translations = load_translations()
 def translate_text(text):
     return translations.get(text, text)  # Wenn keine Übersetzung vorhanden ist, Originaltext beibehalten
 
-
+# Alle Links sammeln
 def get_all_links(driver, base_url):
     links = set()
     for a in driver.find_elements(By.CSS_SELECTOR, "a[href]"):
         href = a.get_attribute("href")
-        if isinstance(href, str) and isinstance(base_url, str):  # Nur wenn beide Strings sind
-            links.add(urljoin(base_url, href))
+        if href and isinstance(href, str) and isinstance(base_url, str):  # Überprüfen, ob href und base_url gültige Strings sind
+            if href.startswith("mailto:"):  # mailto: Links ausschließen
+                continue
+            try:
+                absolute_url = urljoin(base_url, href)
+                links.add(absolute_url)
+            except Exception as e:
+                print(f"Error joining URL {href}: {e}")
     return links
-
-# Funktion zum Testen des Farbkontrasts
-def test_color_contrast(driver, url):
-    axe = Axe(driver)
-    axe.inject()
-    results = axe.run()
-    
-    contrast_violations = []
-    
-    for violation in results.get("violations", []):
-        if "color contrast" in violation.get("id", ""):
-            for node in violation.get("nodes", []):
-                html = node.get("html", "")
-                contrast_violations.append({
-                    "element": html,
-                    "description": violation.get("description"),
-                    "impact": violation.get("impact")
-                })
-
-    return contrast_violations
 
 # Funktion zur Berechnung der Helligkeit einer Farbe (Luminance)
 def lumincance(hex_color):
@@ -111,41 +114,40 @@ def contrast_ratio(color1, color2):
 def rgb_to_hex(r, g, b):
     return "#{:02x}{:02x}{:02x}".format(r, g, b)
 
+def parse_color(color):
+    if color.startswith("rgba"):
+        return rgb_to_hex(*rgba_to_rgb(color))
+    elif color.startswith("#"):
+        return color
+    else:
+        return None  # Unbekannte Werte ignorieren
 
 # Funktion zur Überprüfung des Kontrasts und Ausgabe von Fehlern
 def check_contrast(driver):
-    elements = driver.find_elements("xpath", "//*")  # Alle Elemente auf der Seite
+    WebDriverWait(driver, 10).until(lambda d: d.find_elements(By.XPATH, "//*"))
+    elements = driver.find_elements(By.XPATH, "//*")
     violations = []
     
     for element in elements:
         try:
-            color = element.value_of_css_property('color')  # Textfarbe
-            background_color = element.value_of_css_property('background-color')  # Hintergrundfarbe
-
-            # Überprüfen, ob Farben vorhanden sind
+            tag_name = element.tag_name if element.tag_name else "Unbekanntes Element"
+            text = element.text.strip() if element.text else "Kein Text vorhanden"
+            html_snippet = element.get_attribute("outerHTML")[:100] if element.get_attribute("outerHTML") else "[Kein HTML]"
+            color = element.value_of_css_property('color')
+            background_color = element.value_of_css_property('background-color')
             if not color or not background_color:
                 continue
-            
-            # Umwandlung der RGBA-Farbe in HEX für die Berechnung
-            if "rgba" in color:
-                color = rgb_to_hex(*rgba_to_rgb(color))
-            if "rgba" in background_color:
-                background_color = rgb_to_hex(*rgba_to_rgb(background_color))
-
-            # Berechne das Kontrastverhältnis
-            ratio = contrast_ratio(color, background_color)
-            
-            if ratio < 4.5:  # Wenn der Kontrast unter 4.5:1 ist, einen Fehler melden
+            contrast = contrast_ratio(color, background_color)
+            if contrast < 4.5:
                 violations.append({
-                    "element": element,
+                    "element": element.tag_name,
                     "text": element.text,
                     "color": color,
                     "background_color": background_color,
-                    "contrast_ratio": ratio
+                    "contrast_ratio": contrast
                 })
-        except Exception as e:
+        except Exception:
             continue
-
     return violations   
 
 # Funktion, die aufgerufen wird, wenn die Checkbox geändert wird
@@ -201,12 +203,15 @@ def test_accessibility():
                         contrast_violations.append((link, contrast_results))
 
             root.after(0, update_output, violations, contrast_violations)
-            driver.quit()
 
         except Exception as e:
             error_message = traceback.format_exc()
             print(f"Fehler: {error_message}")
             root.after(0, lambda: messagebox.showerror("Fehler", f"Es gab einen Fehler:\n{error_message}"))
+            root.after(0, reset_ui)
+
+        finally:
+            driver.quit()
             root.after(0, reset_ui)
 
     threading.Thread(target=run_test, daemon=True).start()
@@ -227,8 +232,7 @@ def update_progress_step(current, total, step_name):
     if current == 1:  # Wenn der Fortschritt zum ersten Mal startet
         progress_bar.pack(pady=10)  # Stelle sicher, dass der Fortschrittsbalken angezeigt wird
 
-
-
+# Funktion um die Ausgabe zu Aktualisieren
 def update_output(violations, contrast_violations):
     global log_content
     output_text.config(state=tk.NORMAL)
@@ -286,7 +290,12 @@ def update_output(violations, contrast_violations):
              # Versuche, mehr Details aus dem WebElement zu bekommen
              description = issue.get("description", "Keine Beschreibung verfügbar")
              impact = issue.get("impact", "Unbekannt")
-             element = str(issue.get("element", "Unbekanntes Element"))
+             if "element" in issue and issue["element"]:
+              tag_name = issue["element"].tag_name if hasattr(issue["element"], "tag_name") else "Unbekanntes Element"
+              text = issue["element"].text[:30] if hasattr(issue["element"], "text") and issue["element"].text else "Kein Text vorhanden"
+              element = tag_name + " - " + text
+             else:
+              element = "Kein Element gefunden"
 
              if isinstance(issue.get("element"), webdriver.remote.webelement.WebElement):
               # Extrahiere tag_name oder text, um mehr Klarheit zu bieten
@@ -306,6 +315,7 @@ def reset_ui():
     status_label.config(text="Bereit für den nächsten Test")
     root.update_idletasks()  # UI sofort aktualisieren
 
+# Funktion zum Speichern des Logs
 def save_log():
     global log_content
     if not log_content.strip():
@@ -322,6 +332,7 @@ def save_log():
             file.write(log_content)
         messagebox.showinfo("Gespeichert", f"Log gespeichert unter:\n{file_path}")
 
+# Allgemeine GUI
 root = tk.Tk()
 root.title("🌍 Barrierefreiheitstester")
 root.geometry("800x800")
@@ -336,6 +347,15 @@ style.configure("TFrame", background="#ffffff", relief="ridge", borderwidth=2)
 header = ttk.Label(root, text="🌍 Barrierefreiheitstester", font=("Arial", 16, "bold"))
 header.pack(pady=10)
 
+# Sprachwahl Dropdown-Menü hinzufügen
+language_options = ["Deutsch", "English"]
+language_var = tk.StringVar(value="Deutsch")  # Standardmäßig Deutsch
+language_menu = ttk.Combobox(root, textvariable=language_var, values=language_options, state="readonly", width=15)
+language_menu.pack(pady=10)
+
+# Füge einen Event-Listener hinzu, der beim Wechseln der Sprache ausgeführt wird
+language_menu.bind("<<ComboboxSelected>>", lambda event: change_language(language_var.get()))
+
 input_frame = ttk.Frame(root)
 input_frame.pack(pady=10, padx=20, fill="x")
 
@@ -345,13 +365,13 @@ url_label.pack(side="left", padx=10)
 url_entry = ttk.Entry(input_frame, width=50)
 url_entry.pack(side="left", padx=5, expand=True, fill="x")
 
-test_button = ttk.Button(input_frame, text="🔍 Test starten", command=test_accessibility)
+test_button = ttk.Button(input_frame, text="🔍 Test starten", command=test_accessibility)  # Funktion hier hinzufügen
 test_button.pack(side="right", padx=10)
 
-# Füge die Progressbar direkt zu Beginn hinzu, nicht nur während des Tests
+# Progressbar und andere Widgets wie gehabt...
 progress_bar = ttk.Progressbar(root, orient="horizontal", length=400, mode="determinate")
 progress_bar.pack(pady=10)
-# Füge ein Label hinzu, um die Prozentanzeige anzuzeigen
+
 progress_percentage = ttk.Label(root, text="0%", font=("Arial", 12))
 progress_percentage.pack(pady=5)
 status_label = ttk.Label(root, text="Bereit für den nächsten Test", font=("Arial", 10))
@@ -368,16 +388,11 @@ scrollbar = ttk.Scrollbar(output_frame, orient="vertical", command=output_text.y
 scrollbar.pack(side="right", fill="y")
 output_text.config(yscrollcommand=scrollbar.set)
 
-# Variable zum Verfolgen, ob der Kontrast-Check aktiviert ist
-contrast_check_enabled = tk.BooleanVar(value=True)  # Standardmäßig aktiviert
-# Checkbox für den Kontrast-Check
-contrast_check_var = tk.BooleanVar(value=True)  # Initialisiert mit aktiviertem Kontrast-Check
-contrast_check_checkbox = ttk.Checkbutton(root, text="Kontrast-Check aktivieren", variable=contrast_check_var, command=toggle_contrast_check)
+contrast_check_var = tk.BooleanVar(value=True)
+contrast_check_checkbox = ttk.Checkbutton(root, text="Kontrast-Check aktivieren", variable=contrast_check_var, command=None)
 contrast_check_checkbox.pack(pady=5)
 
-save_button = ttk.Button(root, text="📂 Log speichern", command=save_log)
+save_button = ttk.Button(root, text="📂 Log speichern", command=save_log)  # Funktion hier hinzufügen
 save_button.pack(pady=10)
-
-output_text.tag_configure("bold", font=("Arial", 10, "bold"))
 
 root.mainloop()
