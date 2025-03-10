@@ -54,5 +54,7 @@
 "Ensures all ARIA attributes have valid values":
    "Stellt sicher, dass alle ARIA-Attribute gültige Werte haben",
 "ARIA attributes must conform to valid values":
-   "ARIA-Attribute müssen gültigen Werten entsprechen"
+   "ARIA-Attribute müssen gültigen Werten entsprechen",
+"Ensures attributes that begin with aria- are valid ARIA attributes":
+   "Stellt sicher, dass Attribute, die mit aria- beginnen, gültige ARIA-Attribute sind"
 }
