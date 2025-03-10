@@ -73,82 +73,83 @@ def get_all_links(driver, base_url):
                 print(f"Error joining URL {href}: {e}")
     return links
 
-# Funktion zur Berechnung der Helligkeit einer Farbe (Luminance)
-def lumincance(hex_color):
-    rgb = [int(hex_color[i:i+2], 16) / 255.0 for i in (1, 3, 5)]  # Konvertiere Hex nach RGB
+# Function to convert color to RGB from hex
+def hex_to_rgb(hex_color):
+    hex_color = hex_color.lstrip("#")
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))  # Convert Hex to RGB
+
+# Function to calculate luminance (brightness) of a color
+def luminance(rgb):
+    rgb = [color / 255.0 for color in rgb]  # Normalize RGB values
     rgb = [((color / 12.92) if (color <= 0.03928) else ((color + 0.055) / 1.055) ** 2.4) for color in rgb]
     return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
 
-# Hilfsfunktion zur Umwandlung von Hex nach RGB
-def hex_to_rgb(hex_color):
-    hex_color = hex_color.lstrip("#")
-    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))  # Konvertiere Hex nach RGB
-
-# Umwandlung der RGBA-Farbe in RGB
-def rgba_to_rgb(rgba):
-    rgba = rgba.replace("rgba(", "").replace(")", "").split(",")
-    return tuple(int(c) for c in rgba[:3])  # Nur RGB ohne Alpha-Wert
-
-# Funktion zur Berechnung des Kontrastverhältnisses
+# Function to calculate the contrast ratio
 def contrast_ratio(color1, color2):
-    # Wenn die Farben RGBA sind, konvertiere sie in RGB, sonst in HEX
-    if "rgba" in color1:
-        color1_rgb = rgba_to_rgb(color1)
-    else:
-        color1_rgb = hex_to_rgb(color1.lstrip("#"))
-
-    if "rgba" in color2:
-        color2_rgb = rgba_to_rgb(color2)
-    else:
-        color2_rgb = hex_to_rgb(color2.lstrip("#"))
-
-    L1 = lumincance(rgb_to_hex(*color1_rgb))
-    L2 = lumincance(rgb_to_hex(*color2_rgb))
-
+    color1_rgb = parse_color(color1)
+    color2_rgb = parse_color(color2)
+    
+    if not color1_rgb or not color2_rgb:
+        return None  # Skip if color parsing fails
+    
+    L1 = luminance(color1_rgb)
+    L2 = luminance(color2_rgb)
+    
     if L1 > L2:
         return (L1 + 0.05) / (L2 + 0.05)
     else:
         return (L2 + 0.05) / (L1 + 0.05)
 
-# Hilfsfunktion zur Umwandlung von RGB nach Hex
-def rgb_to_hex(r, g, b):
-    return "#{:02x}{:02x}{:02x}".format(r, g, b)
+# Helper function to convert RGBA to RGB
+def rgba_to_rgb(rgba):
+    rgba = rgba.replace("rgba(", "").replace(")", "").split(",")
+    return tuple(int(c) for c in rgba[:3])  # Only RGB, no alpha
 
+# Function to parse the color (either Hex or RGBA)
 def parse_color(color):
-    if color.startswith("rgba"):
-        return rgb_to_hex(*rgba_to_rgb(color))
+    if "rgba" in color:
+        return rgba_to_rgb(color)
     elif color.startswith("#"):
-        return color
-    else:
-        return None  # Unbekannte Werte ignorieren
+        return hex_to_rgb(color)
+    return None  # Return None for unsupported color formats
 
-# Funktion zur Überprüfung des Kontrasts und Ausgabe von Fehlern
+# Function to check contrast and report violations
 def check_contrast(driver):
-    WebDriverWait(driver, 10).until(lambda d: d.find_elements(By.XPATH, "//*"))
+    WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//*")))
     elements = driver.find_elements(By.XPATH, "//*")
     violations = []
     
     for element in elements:
         try:
-            tag_name = element.tag_name if element.tag_name else "Unbekanntes Element"
-            text = element.text.strip() if element.text else "Kein Text vorhanden"
-            html_snippet = element.get_attribute("outerHTML")[:100] if element.get_attribute("outerHTML") else "[Kein HTML]"
+            tag_name = element.tag_name if element.tag_name else "Unknown Element"
+            text = element.text.strip() if element.text else "No Text"
+            html_snippet = element.get_attribute("outerHTML")[:100] if element.get_attribute("outerHTML") else "[No HTML]"
+            
+            # Get color and background-color from CSS
             color = element.value_of_css_property('color')
             background_color = element.value_of_css_property('background-color')
+            
+            # Skip elements without color properties
             if not color or not background_color:
                 continue
+
+            # Calculate contrast ratio
             contrast = contrast_ratio(color, background_color)
-            if contrast < 4.5:
+            
+            if contrast and contrast < 4.5:  # If contrast ratio is below threshold
                 violations.append({
-                    "element": element.tag_name,
-                    "text": element.text,
+                    "element": tag_name,
+                    "text": text,
                     "color": color,
                     "background_color": background_color,
-                    "contrast_ratio": contrast
+                    "contrast_ratio": contrast,
+                    "html_snippet": html_snippet
                 })
-        except Exception:
+        except Exception as e:
+            # Optionally log the error if needed
             continue
-    return violations   
+    
+    return violations
 
 # Funktion, die aufgerufen wird, wenn die Checkbox geändert wird
 def toggle_contrast_check():
@@ -183,8 +184,8 @@ def test_accessibility():
             contrast_violations = []
 
             for index, link in enumerate(all_links, start=1):
+                WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//*")))
                 driver.get(link)
-                time.sleep(2)
 
                 axe = Axe(driver)
                 axe.inject()
@@ -279,7 +280,6 @@ def update_output(violations, contrast_violations):
         messagebox.showinfo("Ergebnis", "✅ Keine Barrierefreiheitsprobleme gefunden!")
         log_content = "✅ Keine Barrierefreiheitsprobleme gefunden!"
 
-    # Kontrastprobleme anzeigen
     if contrast_violations:
         for link, contrast_issues in contrast_violations:
             entry = f"🔍 Kontrast-Probleme für: {link}\n"
@@ -287,23 +287,16 @@ def update_output(violations, contrast_violations):
             log_content += entry + "\n"
 
             for issue in contrast_issues:
-             # Versuche, mehr Details aus dem WebElement zu bekommen
-             description = issue.get("description", "Keine Beschreibung verfügbar")
-             impact = issue.get("impact", "Unbekannt")
-             if "element" in issue and issue["element"]:
-              tag_name = issue["element"].tag_name if hasattr(issue["element"], "tag_name") else "Unbekanntes Element"
-              text = issue["element"].text[:30] if hasattr(issue["element"], "text") and issue["element"].text else "Kein Text vorhanden"
-              element = tag_name + " - " + text
-             else:
-              element = "Kein Element gefunden"
+                element = issue.get("element", "Kein Element gefunden")
+                text = issue.get("text", "Kein Text verfügbar")
+                color = issue.get("color", "Keine Farbe")
+                background_color = issue.get("background_color", "Kein Hintergrund")
+                contrast_ratio_value = issue.get("contrast_ratio", "Kein Kontrastverhältnis")
+                html_snippet = issue.get("html_snippet", "Kein HTML-Snippet verfügbar")
 
-             if isinstance(issue.get("element"), webdriver.remote.webelement.WebElement):
-              # Extrahiere tag_name oder text, um mehr Klarheit zu bieten
-              element = issue["element"].tag_name + " - " + (issue["element"].text[:30] if issue["element"].text else "Kein Text vorhanden")
-
-             entry = f"  ⚠️ Fehler: {description}\n  🔴 Schweregrad: {impact}\n  📌 Element: {element}\n\n"
-             output_text.insert(tk.END, entry, "red")
-             log_content += entry + "\n"
+                entry = f"  ⚠️ Fehler: Zu niedriger Kontrast zwischen {color} und {background_color}\n  📌 Element: {element}\n  🔴 Kontrast-Verhältnis: {contrast_ratio_value}\n  HTML: {html_snippet}\n"
+                output_text.insert(tk.END, entry, "red")
+                log_content += entry + "\n"
 
     output_text.config(state=tk.DISABLED)
     reset_ui()
@@ -389,7 +382,7 @@ scrollbar.pack(side="right", fill="y")
 output_text.config(yscrollcommand=scrollbar.set)
 
 contrast_check_var = tk.BooleanVar(value=True)
-contrast_check_checkbox = ttk.Checkbutton(root, text="Kontrast-Check aktivieren", variable=contrast_check_var, command=None)
+contrast_check_checkbox = ttk.Checkbutton(root, text="Kontrast-Check aktivieren", variable=contrast_check_var, command=toggle_contrast_check)
 contrast_check_checkbox.pack(pady=5)
 
 save_button = ttk.Button(root, text="📂 Log speichern", command=save_log)  # Funktion hier hinzufügen
