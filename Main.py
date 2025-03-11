@@ -294,8 +294,10 @@ def update_output(violations, contrast_violations):
                 contrast_ratio_value = issue.get("contrast_ratio", "Kein Kontrastverhältnis")
                 html_snippet = issue.get("html_snippet", "Kein HTML-Snippet verfügbar")
 
+                color_la = "red" if contrast_ratio_value >= 1.0 else "orange" if contrast_ratio_value >= 3.0 else "blue"
+
                 entry = f"  ⚠️ Fehler: Zu niedriger Kontrast zwischen {color} und {background_color}\n  📌 Element: {element}\n  🔴 Kontrast-Verhältnis: {contrast_ratio_value}\n  HTML: {html_snippet}\n"
-                output_text.insert(tk.END, entry, "red")
+                output_text.insert(tk.END, entry, color_la)
                 log_content += entry + "\n"
 
     output_text.config(state=tk.DISABLED)
