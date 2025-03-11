@@ -8,8 +8,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from axe_selenium_python import Axe
-from urllib.parse import urljoin, urlparse
-import time
+from urllib.parse import urljoin
 import traceback  
 import json
 
@@ -25,23 +24,6 @@ chrome_options.add_argument("--ignore-certificate-errors")
 chrome_options.add_argument("--disable-web-security")
 chrome_options.add_argument("--disable-software-rasterizer")
 
-# Funktion zum ändern der GUI Sprache
-def change_language(language):
-    if language == "Deutsch":
-        header.config(text="🌍 Barrierefreiheitstester")
-        url_label.config(text="🔗 Webseite URL:")
-        test_button.config(text="🔍 Test starten")
-        status_label.config(text="Bereit für den nächsten Test")
-        contrast_check_checkbox.config(text="Kontrast-Check aktivieren")
-        save_button.config(text="📂 Log speichern")
-    elif language == "English":
-        header.config(text="🌍 Accessibility Tester")
-        url_label.config(text="🔗 Website URL:")
-        test_button.config(text="🔍 Start Test")
-        status_label.config(text="Ready for the next test")
-        contrast_check_checkbox.config(text="Enable contrast check")
-        save_button.config(text="📂 Save Log")
-
 # Funktion zum Laden der Übersetzungen aus der JSON-Datei
 def load_translations():
     try:
@@ -51,12 +33,38 @@ def load_translations():
         print(f"Fehler beim Laden der Übersetzungen: {e}")
         return {}
 
-# Lade die Übersetzungen zu Beginn des Programms
 translations = load_translations()
 
+# Funktion zum Speichern der Spracheinstellung
+def save_language_setting(language):
+    with open("config.json", "w", encoding="utf-8") as f:
+        json.dump({"language": language}, f)
+
+# Funktion zum Laden der Spracheinstellung
+def load_language_setting():
+    try:
+        with open("config.json", "r", encoding="utf-8") as f:
+            return json.load(f).get("language", "Deutsch")
+    except FileNotFoundError:
+        return "Deutsch"
+
 # Übersetzungsfunktion
-def translate_text(text):
-    return translations.get(text, text)  # Wenn keine Übersetzung vorhanden ist, Originaltext beibehalten
+def translate_text(text, language):
+    return translations.get(language, {}).get(text, text)
+
+# Funktion zum Ändern der Sprache
+def change_language(language):
+    save_language_setting(language)
+    header.config(text=translate_text("Accessibility Tester", language))
+    url_label.config(text=translate_text("Website URL:", language))
+    test_button.config(text=translate_text("Start Test", language))
+    status_label.config(text=translate_text("Ready for the next test", language))
+    contrast_check_checkbox.config(text=translate_text("Enable contrast check", language))
+    save_button.config(text=translate_text("Save Log", language))
+    
+# Sprachwahl-Menü
+def on_language_change(event):
+    change_language(language_var.get())
 
 # Alle Links sammeln
 def get_all_links(driver, base_url):
@@ -260,8 +268,8 @@ def update_output(violations, contrast_violations):
                 }
                 
                 impact_de = impact_translation.get(impact, "Unbekannt")
-                description_de = translate_text(description)
-                help_de = translate_text(help_url)
+                description_de = translate_text(description, language_var.get())
+                help_de = translate_text(help_url, language_var.get())
 
                 color = "red" if impact == "critical" else "orange" if impact == "moderate" else "blue"
 
@@ -342,11 +350,11 @@ style.configure("TFrame", background="#ffffff", relief="ridge", borderwidth=2)
 header = ttk.Label(root, text="🌍 Barrierefreiheitstester", font=("Arial", 16, "bold"))
 header.pack(pady=10)
 
-# Sprachwahl Dropdown-Menü hinzufügen
-language_options = ["Deutsch", "English"]
-language_var = tk.StringVar(value="Deutsch")  # Standardmäßig Deutsch
+language_options = list(translations.keys())
+language_var = tk.StringVar(value=load_language_setting())
 language_menu = ttk.Combobox(root, textvariable=language_var, values=language_options, state="readonly", width=15)
 language_menu.pack(pady=10)
+language_menu.bind("<<ComboboxSelected>>", on_language_change)
 
 # Füge einen Event-Listener hinzu, der beim Wechseln der Sprache ausgeführt wird
 language_menu.bind("<<ComboboxSelected>>", lambda event: change_language(language_var.get()))
@@ -357,7 +365,7 @@ input_frame.pack(pady=10, padx=20, fill="x")
 url_label = ttk.Label(input_frame, text="🔗 Webseite URL:")
 url_label.pack(side="left", padx=10)
 
-url_entry = ttk.Entry(input_frame, width=50)
+url_entry = EntryEx(input_frame, width=50)
 url_entry.pack(side="left", padx=5, expand=True, fill="x")
 
 test_button = ttk.Button(input_frame, text="🔍 Test starten", command=test_accessibility)  # Funktion hier hinzufügen
