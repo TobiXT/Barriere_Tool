@@ -1,60 +1,98 @@
 {
+
+    "Deutsch": {
+    "Accessibility Tester": "🌍 Barrierefreiheitstester",
+    "Website URL:": "🔗 Webseite URL:",
+    "Start Test": "🔍 Test starten",
+    "Ready for the next test": "Bereit für den nächsten Test",
+    "Enable contrast check": "Kontrast-Check aktivieren",
+    "Save Log": "📂 Log speichern",
+    "Error": "❌ Fehler",
+    "Please enter a URL!": "Bitte eine URL eingeben!",
+    "No accessibility issues found!": "✅ Keine Barrierefreiheitsprobleme gefunden!",
     "Ensures role attribute has an appropriate value for the element": 
     "Stellt sicher, dass das Rollen-Attribut einen geeigneten Wert für das Element hat.",
-"ARIA role must be appropriate for the element": 
+    "ARIA role must be appropriate for the element": 
     "Die ARIA-Rolle muss für das Element geeignet sein.",
-"Elements must have sufficient color contrast": 
+    "Elements must have sufficient color contrast": 
     "Elemente müssen einen ausreichenden Farbkontrast haben.",
-"Form elements must have labels": 
+    "Form elements must have labels": 
     "Formularelemente müssen Beschriftungen haben.",
-"Links must have a discernible name": 
+    "Links must have a discernible name": 
     "Links müssen einen erkennbaren Namen haben.",
-"Images must have alternative text": 
+    "Images must have alternative text": 
     "Bilder müssen einen alternativen Text haben.",
-"Ensures the contrast between foreground and background colors meets WCAG 2 AA contrast ratio thresholds":
+    "Ensures the contrast between foreground and background colors meets WCAG 2 AA contrast ratio thresholds":
     "Stellt sicher, dass der Kontrast zwischen Vordergrund- und Hintergrundfarben den Kontrastverhältnis-Schwellenwerten von WCAG 2 AA entspricht",
-"Ensures every id attribute value is unique":
+    "Ensures every id attribute value is unique":
     "Stellt sicher, dass jeder ID-Attributwert eindeutig ist",
-"id attribute value must be unique":
+    "id attribute value must be unique":
     "Der Wert des ID-Attributs muss eindeutig sein",
-"Ensures the order of headings is semantically correct":
+    "Ensures the order of headings is semantically correct":
     "Stellt sicher, dass die Reihenfolge der Überschriften semantisch korrekt ist",
-"Heading levels should only increase by one":
-   "Überschriftenebenen sollten nur um eine Ebene erhöht werden",
-"Ensures links have discernible text":
-   "Stellt sicher, dass Links einen lesbaren Text haben",
-"Links must have discernible text":
-   "Links müssen lesbaren Text haben",
-"Ensures all page content is contained by landmarks":
-   "Stellt sicher, dass der gesamte Seiteninhalt durch Orientierungspunkte begrenzt ist",
-"All page content must be contained by landmarks":
-   "Der gesamte Seiteninhalt muss von Orientierungspunkten umgeben sein",
-"Ensures every form element has a label":
-   "Stellt sicher, dass jedes Formularelement eine Beschriftung hat",
-"Ensure that the page, or at least one of its frames contains a level-one heading":
-   "Stellen Sie sicher, dass die Seite oder mindestens einer ihrer Frames eine Überschrift der ersten Ebene enthält",
-"Page must contain a level-one heading":
-   "Die Seite muss eine Überschrift der ersten Ebene enthalten",
-"Ensures <img> elements have alternate text or a role of none or presentation":
-   "Stellt sicher, dass <img>-Elemente alternativen Text oder die Rolle „Keine“ oder „Präsentation“ haben.",
-"Images must have alternate text":
-   "Bilder müssen alternativen Text haben",
-"Ensures related <input type=radio> elements have a group and that the group designation is consistent":
-   "Stellt sicher, dass verwandte <input type=radio>-Elemente eine Gruppe haben und dass die Gruppenbezeichnung konsistent ist",
-"Radio inputs with the same name attribute value must be part of a group":
-   "Radio-Inputs mit gleichem Namensattributwert müssen Teil einer Gruppe sein",
-"Ensures headings have discernible text":
-   "Stellt sicher, dass Überschriften lesbaren Text haben",
-"Headings must not be empty":
-   "Überschriften dürfen nicht leer sein",
-"Ensures every id attribute value of active elements is unique":
-   "Stellt sicher, dass jeder ID-Attributwert aktiver Elemente eindeutig ist",
-"IDs of active elements must be unique":
-   "IDs aktiver Elemente müssen eindeutig sein",
-"Ensures all ARIA attributes have valid values":
-   "Stellt sicher, dass alle ARIA-Attribute gültige Werte haben",
-"ARIA attributes must conform to valid values":
-   "ARIA-Attribute müssen gültigen Werten entsprechen",
-"Ensures attributes that begin with aria- are valid ARIA attributes":
-   "Stellt sicher, dass Attribute, die mit aria- beginnen, gültige ARIA-Attribute sind"
+    "Heading levels should only increase by one":
+    "Überschriftenebenen sollten nur um eine Ebene erhöht werden",
+    "Ensures links have discernible text":
+    "Stellt sicher, dass Links einen lesbaren Text haben",
+    "Links must have discernible text":
+    "Links müssen lesbaren Text haben",
+    "Ensures all page content is contained by landmarks":
+    "Stellt sicher, dass der gesamte Seiteninhalt durch Orientierungspunkte begrenzt ist",
+    "All page content must be contained by landmarks":
+    "Der gesamte Seiteninhalt muss von Orientierungspunkten umgeben sein",
+    "Ensures every form element has a label":
+    "Stellt sicher, dass jedes Formularelement eine Beschriftung hat",
+    "Ensure that the page, or at least one of its frames contains a level-one heading":
+    "Stellen Sie sicher, dass die Seite oder mindestens einer ihrer Frames eine Überschrift der ersten Ebene enthält",
+    "Page must contain a level-one heading":
+    "Die Seite muss eine Überschrift der ersten Ebene enthalten",
+    "Ensures <img> elements have alternate text or a role of none or presentation":
+    "Stellt sicher, dass <img>-Elemente alternativen Text oder die Rolle „Keine“ oder „Präsentation“ haben.",
+    "Images must have alternate text":
+    "Bilder müssen alternativen Text haben",
+    "Ensures related <input type=radio> elements have a group and that the group designation is consistent":
+    "Stellt sicher, dass verwandte <input type=radio>-Elemente eine Gruppe haben und dass die Gruppenbezeichnung konsistent ist",
+    "Radio inputs with the same name attribute value must be part of a group":
+    "Radio-Inputs mit gleichem Namensattributwert müssen Teil einer Gruppe sein",
+    "Ensures headings have discernible text":
+    "Stellt sicher, dass Überschriften lesbaren Text haben",
+    "Headings must not be empty":
+    "Überschriften dürfen nicht leer sein",
+    "Ensures every id attribute value of active elements is unique":
+    "Stellt sicher, dass jeder ID-Attributwert aktiver Elemente eindeutig ist",
+    "IDs of active elements must be unique":
+    "IDs aktiver Elemente müssen eindeutig sein",
+    "Ensures all ARIA attributes have valid values":
+    "Stellt sicher, dass alle ARIA-Attribute gültige Werte haben",
+    "ARIA attributes must conform to valid values":
+    "ARIA-Attribute müssen gültigen Werten entsprechen",
+    "Ensures attributes that begin with aria- are valid ARIA attributes":
+    "Stellt sicher, dass Attribute, die mit aria- beginnen, gültige ARIA-Attribute sind",
+    "Ensures the page has only one main landmark and each iframe in the page has at most one main landmark":
+    "Stellt sicher, dass die Seite nur ein Haupt-Landmark hat und jeder Iframe auf der Seite höchstens ein Haupt-Landmark hat.",
+    "Page must have one main landmark":
+    "Die Seite muss ein Hauptmerkmal haben"
+  },
+  "English": {
+    "Accessibility Tester": "🌍 Accessibility Tester",
+    "Website URL:": "🔗 Website URL:",
+    "Start Test": "🔍 Start Test",
+    "Ready for the next test": "Ready for the next test",
+    "Enable contrast check": "Enable contrast check",
+    "Save Log": "📂 Save Log",
+    "Error": "❌ Error",
+    "Please enter a URL!": "Please enter a URL!",
+    "No accessibility issues found!": "✅ No accessibility issues found!"
+  },
+  "Français": {
+    "Accessibility Tester": "🌍 Testeur d'accessibilité",
+    "Website URL:": "🔗 URL du site Web :",
+    "Start Test": "🔍 Démarrer le test",
+    "Ready for the next test": "Prêt pour le prochain test",
+    "Enable contrast check": "Activer la vérification du contraste",
+    "Save Log": "📂 Enregistrer le journal",
+    "Error": "❌ Erreur",
+    "Please enter a URL!": "Veuillez entrer une URL !",
+    "No accessibility issues found!": "✅ Aucun problème d'accessibilité trouvé !"
+  }
 }
